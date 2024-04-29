@@ -1,0 +1,35 @@
+pipeline{
+    agent any
+    stages{
+        
+        stage('checkout'){
+            steps{
+                git branch: 'main', url: 'https://github.com/dipak345/react_django_demo_app.git' 
+            }
+         
+        }
+        
+        stage('docker-build'){
+            steps{
+                sh "docker build -t react_app ."
+            }
+        }
+        
+        stage('docker-push'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'poll', passwordVariable: 'pwd', usernameVariable: 'uname')]) {
+                sh "docker tag react_app ${env.uname}/react_app:latest"
+                sh "docker login -u ${env.uname} -p ${env.pwd}"
+                sh "docker push ${env.uname}/react_app:latest"
+        }
+            }
+        }
+        stage('docker-deploy'){
+            steps{
+                sh "docker run -d -p 8001:8001 dipakkhilare567/react_app:latest"
+                //sh "docker-compose down && docker-compose up -d"
+            }
+        }
+       
+    }
+} 
